@@ -9,7 +9,7 @@ def main():
     print("Inspection will now begin with the given box.\n")
 
     box_num = input("Pick a box (1-9): ")
-                                                                            #         Presets         Brightness     Breaker Thresh     Fuse Pixel Ratio
+                                                     #         Presets         Brightness     Breaker Thresh     Fuse Pixel Ratio
     #Box examples
     box = '../images/Box_Examples/box_1.jpg'         # (On,  3 Fuses, 28/30)     (109)           (120-180)            (1.52)
     if box_num == '2': 
