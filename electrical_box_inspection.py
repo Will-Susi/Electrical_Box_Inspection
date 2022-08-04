@@ -9,7 +9,7 @@ def main():
     print("Inspection will now begin with the given box.\n")
 
     box_num = input("Pick a box (1-9): ")
-                                                     #         Presets         Brightness     Breaker Thresh     Fuse Pixel Ratio
+                                                     #         Presets         Brightness     Breaker Thresh     Fuse Pixel Ratio               Problems
     #Box examples
     box = '../images/Box_Examples/box_1.jpg'         # (On,  3 Fuses, 28/30)     (109)           (120-180)            (1.52)
     if box_num == '2': 
@@ -22,8 +22,24 @@ def main():
         box = '../images/Box_Examples/box_5.jpg'     # (Off, 3 Fuses, 60/0)      (125)           (210-240)            (2.12)
     elif box_num == '6': 
         box = '../images/Box_Examples/box_6.jpg'     # (Off, 3 Fuses, 40/10)     (124)           (220-240)            (2.1)
-    # elif box_num == '8':                          
-    #     box = '../images/Box_Examples/box_8.jpg'   # Your example
+    # elif box_num == '7': 
+    #     box = '../images/Box_Examples/box_7.jpg'     # (On, 2 Fuses, 10/50)      (128)           (185-195)            (2.8)    
+    elif box_num == '8': 
+        box = '../images/Box_Examples/box_8.jpg'     # (On, 2 Fuses, 10/50) (F)  (130)           (140-170)            (2.7)          Can't identify 'OFF' ; Can't Identify temp_box
+    elif box_num == '9': 
+        box = '../images/Box_Examples/box_9.jpg'     # (On, 1 Fuses, 10/50) (F)  (130)           (140-170)            (4.66)         Can't identify 'OFF' ; Identifies blue marker line as blue dial, 
+    elif box_num == '10': 
+        box = '../images/Box_Examples/box_10.jpg'    # (On, 1 Fuses, 10/50)      (130)           (170-210)            (4.03) 
+    elif box_num == '11': 
+        box = '../images/Box_Examples/box_11.jpg'    # (Off, 0 Fuses, 45/15)     (131)           (210-250)            (5.43) 
+    elif box_num == '12': 
+        box = '../images/Box_Examples/box_12.jpg'    # (Off, 0 Fuses, 45/15) (F) (132)           (140-170)            (N/A)          Incorrectly identifies/inspects fuses ; Incorrectly gets red dial temp
+    elif box_num == '13': 
+        box = '../images/Box_Examples/box_13.jpg'    # (Off, 2 Fuses, 5/40) (F)  (132)           (140-170)            (N/A)          Incorrectly gets red dial temp
+    elif box_num == '14': 
+        box = '../images/Box_Examples/box_14.jpg'    # (Off, 2 Fuses, 5/40)      (128)           (220-250)            (N/A)          Red dial temp reading off
+    # elif box_num == '99':                          
+    #     box = '../images/Box_Examples/box_15.jpg'   # Your example
 
     box = cv2.imread(box)
     brightness = round(np.average(box))
@@ -34,7 +50,7 @@ def main():
         breaker_reference = '../images/Box_Parts/breaker_1.jpg'
         fuse_reference = '../images/Box_Parts/fuses_1.jpg'
         temp_reference = '../images/Box_Parts/tempbox_1.jpg'
-    elif 115 < brightness and brightness <= 130:
+    elif 115 < brightness and brightness <= 140:
         breaker_reference = '../images/Box_Parts/breaker_2.jpg'
         fuse_reference = '../images/Box_Parts/fuses_2.jpg'
         temp_reference = '../images/Box_Parts/tempbox_2.jpg'
@@ -44,8 +60,13 @@ def main():
     #     temp_reference = '../images/Box_Parts/tempbox_3.jpg'
     
     #Adaptive parameters for change in lighting
-    switch_min_threshold = 4.5 * brightness - 330
-    fuse_pixel_ratio = .045 * brightness - 3
+    switch_min_threshold = 3.2 * brightness - 185
+    if switch_min_threshold > 250: 
+        switch_min_threshold = 250
+    if switch_min_threshold < 5:
+        switch_min_threshold = 5
+    #switch_min_threshold = 195
+    fuse_pixel_ratio = .045 * brightness - 3.3
 
     zoom = box[box.shape[0]//2:box.shape[0], 0:box.shape[1]//2 ]
     breaker = find_component(box, zoom, breaker_reference)
@@ -120,7 +141,7 @@ def find_component(box, zoom, reference):
 def inspect_breaker(breaker, switch_min_threshold):
     print('Inspecting breaker...\n')
     
-    switch = breaker[breaker.shape[0]*8//18:breaker.shape[0]*12//18, breaker.shape[1]*10//20:breaker.shape[1]*13//20 ]
+    switch = breaker[breaker.shape[0]*8//18:breaker.shape[0]*12//18, breaker.shape[1]*10//20:breaker.shape[1]*12//20 ]
 
     #Pick out white text
     img = switch
@@ -132,11 +153,13 @@ def inspect_breaker(breaker, switch_min_threshold):
     img_dilation = cv2.dilate(threshold, kernel, iterations=1)
     # cv2.imshow('dil', img_dilation)
     # cv2.waitKey()
-    kernel = np.ones((25,25), np.uint8) #Number enhances splotches
-    img_erosion = cv2.erode(img_dilation, kernel, iterations=1)
-    # cv2.imshow('erode', img_erosion)
-    # cv2.waitKey()
-    contours, hierarchy = cv2.findContours(img_erosion, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(img_dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    if 2 > len(contours) or len(contours) > 3:
+        kernel = np.ones((25,25), np.uint8) #Number enhances splotches
+        img_erosion = cv2.erode(img_dilation, kernel, iterations=1)
+        # cv2.imshow('erode', img_erosion)
+        # cv2.waitKey()
+        contours, hierarchy = cv2.findContours(img_erosion, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     #Compare distances of 'ON' / ''OFF' to middle text to detemine whether
     #the switch is closer to the 'ON' or 'OFF' position
