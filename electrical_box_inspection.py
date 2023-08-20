@@ -1,81 +1,51 @@
+#!/usr/bin/env python3
+
+import os
+import sys
 from os import system
 import math
 import cv2
 import numpy as np
 
 def main():
-    #system('clear')
+    system('clear')
+    box_num = sys.argv[1]
     print("This is a script to test the functionality of Spot's box inspection.\n")
-    print("Inspection will now begin with the given box.\n")
-
-    box_num = input("Pick a box (1-9): ")
-                                                     #         Presets         Brightness     Breaker Thresh     Fuse Pixel Ratio               Problems
-    #Box examples
-    box = '../images/Box_Examples/box_1.jpg'         # (On,  3 Fuses, 28/30)     (109)           (120-180)            (1.52)
-    if box_num == '2': 
-        box = '../images/Box_Examples/box_2.jpg'     # (Off, 3 Fuses, 28/30)     (108)           (150-190)            (1.35)
-    elif box_num == '3': 
-        box = '../images/Box_Examples/box_3.jpg'     # (Off, 1 Fuses, 28/30)     (110)           (130-180)
-    elif box_num == '4': 
-        box = '../images/Box_Examples/box_4.jpg'     # (Off, 0 Fuses, 28/30)     (111)           (130-190)
-    elif box_num == '5': 
-        box = '../images/Box_Examples/box_5.jpg'     # (Off, 3 Fuses, 60/0)      (125)           (210-240)            (2.12)
-    elif box_num == '6': 
-        box = '../images/Box_Examples/box_6.jpg'     # (Off, 3 Fuses, 40/10)     (124)           (220-240)            (2.1)
-    # elif box_num == '7': 
-    #     box = '../images/Box_Examples/box_7.jpg'     # (On, 2 Fuses, 10/50)      (128)           (185-195)            (2.8)    
-    elif box_num == '8': 
-        box = '../images/Box_Examples/box_8.jpg'     # (On, 2 Fuses, 10/50) (F)  (130)           (140-170)            (2.7)          Can't identify 'OFF' ; Can't Identify temp_box
-    elif box_num == '9': 
-        box = '../images/Box_Examples/box_9.jpg'     # (On, 1 Fuses, 10/50) (F)  (130)           (140-170)            (4.66)         Can't identify 'OFF' ; Identifies blue marker line as blue dial, 
-    elif box_num == '10': 
-        box = '../images/Box_Examples/box_10.jpg'    # (On, 1 Fuses, 10/50)      (130)           (170-210)            (4.03) 
-    elif box_num == '11': 
-        box = '../images/Box_Examples/box_11.jpg'    # (Off, 0 Fuses, 45/15)     (131)           (210-250)            (5.43) 
-    elif box_num == '12': 
-        box = '../images/Box_Examples/box_12.jpg'    # (Off, 0 Fuses, 45/15) (F) (132)           (140-170)            (N/A)          Incorrectly identifies/inspects fuses ; Incorrectly gets red dial temp
-    elif box_num == '13': 
-        box = '../images/Box_Examples/box_13.jpg'    # (Off, 2 Fuses, 5/40) (F)  (132)           (140-170)            (N/A)          Incorrectly gets red dial temp
-    elif box_num == '14': 
-        box = '../images/Box_Examples/box_14.jpg'    # (Off, 2 Fuses, 5/40)      (128)           (220-250)            (N/A)          Red dial temp reading off
-    # elif box_num == '99':                          
-    #     box = '../images/Box_Examples/box_15.jpg'   # Your example
-
-    box = cv2.imread(box)
+    print("Box #", box_num, "has been selected.\n")
+    box = cv2.imread(os.getcwd() + f'/images/Box_Examples/box_{box_num}.jpg')
     brightness = round(np.average(box))
     # print(brightness)
 
-    #Component references
+    ### Takes brightness of image to help determine how the components are found
+    ### May need to be adjusted for added boxes
     if 100 < brightness and brightness <= 115:
-        breaker_reference = '../images/Box_Parts/breaker_1.jpg'
-        fuse_reference = '../images/Box_Parts/fuses_1.jpg'
-        temp_reference = '../images/Box_Parts/tempbox_1.jpg'
+        breaker_reference = os.getcwd() + f'/images/Box_Parts/breaker_1.jpg'
+        fuse_reference = os.getcwd() + f'/images/Box_Parts/fuses_1.jpg'
+        temp_reference = os.getcwd() + f'/images/Box_Parts/tempbox_1.jpg'
     elif 115 < brightness and brightness <= 140:
-        breaker_reference = '../images/Box_Parts/breaker_2.jpg'
-        fuse_reference = '../images/Box_Parts/fuses_2.jpg'
-        temp_reference = '../images/Box_Parts/tempbox_2.jpg'
-    # elif 'min_bright' < brightness and brightness = 'max_bright:      # Your example
-    #     breaker_reference = '../images/Box_Parts/breaker_3.jpg'
-    #     fuse_reference = '../images/Box_Parts/fuses_3.jpg'
-    #     temp_reference = '../images/Box_Parts/tempbox_3.jpg'
+        breaker_reference = os.getcwd() + f'/images/Box_Parts/breaker_2.jpg'
+        fuse_reference = os.getcwd() + f'/images/Box_Parts/fuses_2.jpg'
+        temp_reference = os.getcwd() + f'/images/Box_Parts/tempbox_2.jpg'
     
-    #Adaptive parameters for change in lighting
     switch_min_threshold = 3.2 * brightness - 185
     if switch_min_threshold > 250: 
         switch_min_threshold = 250
     if switch_min_threshold < 5:
         switch_min_threshold = 5
-    #switch_min_threshold = 195
+        
     fuse_pixel_ratio = .045 * brightness - 3.3
 
+    ### Inspect breaker
     zoom = box[box.shape[0]//2:box.shape[0], 0:box.shape[1]//2 ]
     breaker = find_component(box, zoom, breaker_reference)
     inspect_breaker(breaker, switch_min_threshold)
 
+    ### Inspect fuses
     zoom = box[box.shape[0]//4:box.shape[0]//4*3, box.shape[1]//2:box.shape[1]]
     fuses = find_component(box, zoom, fuse_reference)
     inspect_fuses(fuses, fuse_pixel_ratio)
 
+    ### Inspect temperature gauge
     zoom = box[box.shape[0]*4//24:box.shape[0]*9//24, box.shape[1]*8//24:box.shape[1]*13//24 ]
     temperature_box = find_component(box, zoom, temp_reference)
     inspect_temperature_box(temperature_box)
@@ -92,7 +62,7 @@ def find_component(box, zoom, reference):
     reference = cv2.imread(reference)
     reference_gray = cv2.cvtColor(reference, cv2.COLOR_RGB2GRAY)
 
-    #Feature detection
+    ### Feature detection using a given reference to find component
     orb = cv2.ORB_create(nfeatures = 1000)
     img_preview = np.copy(img)
     reference_preview = np.copy(reference)
@@ -117,7 +87,7 @@ def find_component(box, zoom, reference):
     # cv2.imshow('Matches', cv2.resize(dots,(dots.shape[1]//3, dots.shape[0]//3)))
     # cv2.waitKey()
 
-    #Crop box to component part
+    ### Crop box to component part
     if int(dst[0][0][0]) < 0: start_col = 0
     else: start_col =  int(dst[0][0][0])
     if int(dst[2][0][0]) < 0: end_col = 0
@@ -128,6 +98,7 @@ def find_component(box, zoom, reference):
     else: end_row =  int(dst[2][0][1])
     cropped = img_preview[start_row:end_row, start_col:end_col]
 
+    ### Notifies user if part is not identified
     try:
         print('Part identified.\n')
         cv2.imshow('component_outline', cv2.resize(box,(box.shape[1]//5, box.shape[0]//5)))
@@ -143,26 +114,30 @@ def inspect_breaker(breaker, switch_min_threshold):
     
     switch = breaker[breaker.shape[0]*8//18:breaker.shape[0]*12//18, breaker.shape[1]*10//20:breaker.shape[1]*12//20 ]
 
-    #Pick out white text
+    ### Picks out spots of white text
     img = switch
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     ret, threshold = cv2.threshold(gray, switch_min_threshold, 255, cv2.THRESH_BINARY)
     # cv2.imshow('thresh', threshold)
     # cv2.waitKey()
-    kernel = np.ones((20,20), np.uint8) #Number enhances splotches
+    
+    ### Enhances areas of white text
+    kernel = np.ones((20,20), np.uint8) 
     img_dilation = cv2.dilate(threshold, kernel, iterations=1)
     # cv2.imshow('dil', img_dilation)
     # cv2.waitKey()
+    
+    ### Outlines text
     contours, hierarchy = cv2.findContours(img_dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     if 2 > len(contours) or len(contours) > 3:
-        kernel = np.ones((25,25), np.uint8) #Number enhances splotches
+        kernel = np.ones((25,25), np.uint8)
         img_erosion = cv2.erode(img_dilation, kernel, iterations=1)
         # cv2.imshow('erode', img_erosion)
         # cv2.waitKey()
         contours, hierarchy = cv2.findContours(img_erosion, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    #Compare distances of 'ON' / ''OFF' to middle text to detemine whether
-    #the switch is closer to the 'ON' or 'OFF' position
+    ### Compares distance of text on the switch to the 'ON' and 'OFF' text 
+    ### to determine whether the switch is closer to the 'ON' or 'OFF' position
     if len(contours) > 3 or len(contours) < 2:
         print('Too much interference to identify state of breaker.')
         exit()
@@ -194,7 +169,7 @@ def inspect_breaker(breaker, switch_min_threshold):
 def inspect_fuses(fuses, fuse_pixel_ratio):
     print('Inspecting fuses...\n')
 
-    #Covert image to black/white pixels and find their ratio
+    ### Coverts fuses to black and white pixels and find their ratio
     try:
         fuses = cv2.cvtColor(fuses, cv2.COLOR_BGR2RGB)
         pixel_vals = fuses.reshape((-1,3))
@@ -209,7 +184,8 @@ def inspect_fuses(fuses, fuse_pixel_ratio):
         numBlack = np.sum(segmented_image < 100)
         # print('Black/White pixel ratio: ~', round(numBlack/numWhite, 2))
 
-        #Compares the normal ratio of black/white pixels to the image to see if a fuse is missing
+        ### Compares the normal ratio of black/white pixels to the image to see if a fuse is missing
+        ### Fuses are white so there will be more white pixels if they are present
         if (numBlack/numWhite > fuse_pixel_ratio): 
             print("Test FAILED: One or more fuses is missing.\n")
         else:
@@ -228,6 +204,7 @@ def inspect_temperature_box(temperature_box):
     hsv = cv2.cvtColor(temperature_box, cv2.COLOR_BGR2HSV)
     scale = 8
 
+    ### Find and inspect red dial on temperature gauge
     mask_r1 = cv2.inRange(hsv, np.array([0,50,50]), np.array([10,255,255]))
     mask_r2 = cv2.inRange(hsv, np.array([170,60,60]), np.array([180,255,255]))
     red_mask = mask_r1 + mask_r2
@@ -235,6 +212,7 @@ def inspect_temperature_box(temperature_box):
     red_dilation = (10,10) 
     inspect_temperature_dial(temperature_box, 'Red dial', scale, red_mask, red_threshold, red_dilation)
 
+    ### Find and inspect blue dial on temperature gauge
     blue_mask = cv2.inRange(hsv, np.array([100,100,140]), np.array([170,170,255]))
     blue_threshold = 110
     blue_dilation = (20,20)
@@ -248,7 +226,7 @@ def inspect_temperature_dial(temperature_box, dial_color, scale, color_mask, col
     dial_radius = temperature_box.shape[1]*1//10
     temp_copy = temperature_box.copy()
     
-    #Isolate the color of the dial
+    ### Isolate the color of the dial
     color_isolated = cv2.bitwise_and(temp_copy, temp_copy, mask = color_mask)
     # cv2.imshow('color_isolated', color_isolated)
     # cv2.waitKey()
@@ -265,7 +243,7 @@ def inspect_temperature_dial(temperature_box, dial_color, scale, color_mask, col
     contours, hierarchy = cv2.findContours(img_erosion, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(color_isolated, contours, -1, (0, 255, 0), 10)
 
-    #Find and draw the circumference and center of the dial
+    ### Find and outline the circumference and center of the dial
     minX = contours[0][0][0][0]
     maxX = contours[0][0][0][0]
     minY = contours[0][0][0][1]
@@ -284,7 +262,7 @@ def inspect_temperature_dial(temperature_box, dial_color, scale, color_mask, col
     cv2.circle(temperature_box, (center_x, center_y), 2, (0, 255, 0), 2)
     cv2.circle(temperature_box, (center_x, center_y), dial_radius, (0, 255, 0), 3)
 
-    #Examine the diameter where the triangle is located
+    ### Examine the diameter to determine where the temperature indicator is located
     dial = temperature_box[ center_y - dial_radius: center_y + dial_radius, center_x - dial_radius: center_x + dial_radius]
     h, w, _ = dial.shape
     dial = cv2.resize(dial, (w * scale, h * scale))
@@ -300,13 +278,11 @@ def inspect_temperature_dial(temperature_box, dial_color, scale, color_mask, col
     # cv2.imshow("dial_thresh_2", dial_thresh_2)
     # cv2.waitKey()
 
-    #Place a point on the found triangle
+    ### Place a point on the found indicator
     contours, _ = cv2.findContours(dial_thresh_2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
         m = max([(c, cv2.contourArea(c)) for c in contours], key=lambda i: i[1])[0]
-
         M = cv2.moments(m)
-
         if M['m00'] > 0:
             x = M['m10'] / M['m00'] / scale
             y = M['m01'] / M['m00'] / scale
@@ -316,7 +292,7 @@ def inspect_temperature_dial(temperature_box, dial_color, scale, color_mask, col
             point_y = center_y - point_y
             cv2.circle(temperature_box, (point_x, point_y), 2, (0, 255, 0), 2)
 
-    #Calculate the angle between the arrow and the center of the dial to determine the temperature
+    ### Calculate the angle between the arrow and the center of the dial to determine the temperature
     angle = math.atan2(center_y - point_y, (center_x - point_x) * -1) * (180/math.pi)
     if angle < 0:
         angle = angle + 360
@@ -329,8 +305,6 @@ def inspect_temperature_dial(temperature_box, dial_color, scale, color_mask, col
         print(dial_color + "'s", "temperature:", temp_reading, "~", temp_reading + 1, "\u00B0C.\n")
     else:
         print(dial_color + "'s", "temperature reading has malfunctioned.\n")
-
-
 
 if __name__ == "__main__":
     main()
