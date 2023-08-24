@@ -101,7 +101,7 @@ def find_component(box, zoom, reference):
     ### Notifies user if part is not identified
     try:
         print('Part identified.\n')
-        cv2.imshow('component_outline', cv2.resize(box,(box.shape[1]//5, box.shape[0]//5)))
+        #cv2.imshow('component_outline', cv2.resize(box,(box.shape[1]//5, box.shape[0]//5)))
     except:
         print("Part failed to be identified.\n")
         exit()
@@ -162,7 +162,7 @@ def inspect_breaker(breaker, switch_min_threshold):
         else:
             print('Breaker is in "OFF" position.')
 
-    cv2.imshow('img', img)
+    #cv2.imshow('img', img)
     cv2.waitKey()
     cv2.destroyAllWindows()
 
@@ -191,7 +191,7 @@ def inspect_fuses(fuses, fuse_pixel_ratio):
         else:
             print("Test PASSED: All fuses seem to be intact.\n")
 
-        cv2.imshow('Black/white', cv2.resize(segmented_image,(segmented_image.shape[1]//2, segmented_image.shape[0]//2)))
+        #cv2.imshow('Black/white', cv2.resize(segmented_image,(segmented_image.shape[1]//2, segmented_image.shape[0]//2)))
     except:
         print("Test FAILED: Possible all fuses are missing.\n")
 
@@ -218,7 +218,7 @@ def inspect_temperature_box(temperature_box):
     blue_dilation = (20,20)
     inspect_temperature_dial(temperature_box, 'Blue dial', scale, blue_mask, blue_threshold, blue_dilation)
 
-    cv2.imshow('temp_box', temperature_box)
+    #cv2.imshow('temp_box', temperature_box)
     cv2.waitKey()
     cv2.destroyAllWindows()
 

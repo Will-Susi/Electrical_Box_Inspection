@@ -1,7 +1,7 @@
 # Electrical Box Inspection
-This is a single python script that inspects the breaker, fuses, and temperature gauge of a given electrical box example. Provided are box examples along with reference images. 
+This is a single python script that inspects the breaker, fuses, and temperature gauge of a given electrical box. Provided are some examples of this box with various changes in lighting and states. 
 
-The script will both display the outcome in the terminal and display images that coincide with the action the script is performing. If you want to see more in depth images of what's happening there are places in the script that can be uncommented.
+The script will display the results it finds in the terminal. If you want to see a more in depth process of the program there are places in the script that can be uncommented that show the pictures of the steps.
 
 ## Setup:
 First make sure you have python installed.
@@ -29,6 +29,6 @@ When adding examples you must add the box to the 'Box_Examples' with a given nam
 
 ## Problems:
 
-This is by no means a perfect script that works for every example. Lighting is a big factor, so drastic lighting can cause the program to not work properly.
-
-The dial readings fro the temperature boxes will sometimes appear a few degrees off.
+- For users who are running WSL on Windows 10 or who are not running this program through a virtual machine, uncommenting the above mentioned lines will cause the program to not run.
+- This is by no means a perfect script that works for every example, especially added ones; lighting is a big factor, so drastic lighting can cause the program to not work properly.
+- The dial readings for the temperature boxes will sometimes appear a few degrees off.
