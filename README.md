@@ -14,7 +14,7 @@ pip install opencv-python
 ```
 
 ## Running the Script
-To pick the box you would like to be inspected simply add that number to the argument list when running the script like what follows: 
+To pick the box you would like to be inspected simply add that number to the argument list when running the script like the example below: 
 ```
 python3 electrical_box_inspection.py 1
 ```
